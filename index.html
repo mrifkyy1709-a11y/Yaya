@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRAFT CALCULATOR</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #2a2a3a;
+    --accent: #e8c84a;
+    --accent2: #4ae8b0;
+    --accent3: #e84a7a;
+    --text: #e8e8f0;
+    --muted: #6a6a8a;
+    --glow: rgba(232, 200, 74, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: 
+      radial-gradient(ellipse 80% 50% at 10% 20%, rgba(232,200,74,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 80%, rgba(74,232,176,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* GRID PATTERN */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      linear-gradient(rgba(232,200,74,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,200,74,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* HEADER */
+  header {
+    padding: 40px 0 30px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 8vw, 6rem);
+    letter-spacing: 0.05em;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(232,200,74,0.3);
+  }
+
+  .subtitle {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 30px;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* PANEL */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+  }
+
+  .panel-badge {
+    margin-left: auto;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* SET LIST */
+  .set-list {
+    max-height: 70vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .set-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .set-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    transform: scaleY(0);
+    transition: transform 0.15s;
+  }
+
+  .set-item:hover { background: rgba(232,200,74,0.04); }
+  .set-item:hover::before { transform: scaleY(1); }
+  .set-item.selected { background: rgba(232,200,74,0.08); }
+  .set-item.selected::before { transform: scaleY(1); }
+
+  .set-checkbox {
+    width: 16px; height: 16px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .set-item.selected .set-checkbox {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .check-icon { 
+    font-size: 10px; 
+    color: #000;
+    display: none;
+  }
+  .set-item.selected .check-icon { display: block; }
+
+  .set-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    flex: 1;
+  }
+
+  .set-type {
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .set-info {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* INVENTORY INPUT */
+  .inventory-panel {
+    margin-top: 0;
+  }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* SELECTED REQUIREMENTS */
+  .req-panel .req-list {
+    padding: 16px 20px;
+  }
+
+  .req-group {
+    margin-bottom: 18px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .req-group-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .req-group-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .req-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(42,42,58,0.3);
+  }
+
+  .req-row:last-child { border-bottom: none; }
+
+  .req-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .req-amount {
+    font-size: 0.8rem;
+    color: var(--accent2);
+    font-weight: 700;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .req-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    width: 90px;
+    text-align: right;
+    transition: border-color 0.15s;
+  }
+
+  .req-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .req-input.sufficient { border-color: var(--accent2); color: var(--accent2); }
+  .req-input.insufficient { border-color: var(--accent3); color: var(--accent3); }
+
+  /* RESULT PANEL */
+  .result-panel {
+    position: sticky;
+    top: 20px;
+  }
+
+  .result-content {
+    padding: 24px;
+  }
+
+  .result-big {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 5rem;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 30px rgba(232,200,74,0.4);
+  }
+
+  .result-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .result-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  .bottleneck-section {}
+
+  .bottleneck-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .bottleneck-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(42,42,58,0.4);
+  }
+
+  .bottleneck-row:last-child { border-bottom: none; }
+
+  .bottleneck-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    flex: 1;
+  }
+
+  .bottleneck-have {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .bottleneck-need {
+    font-size: 0.75rem;
+    color: var(--accent3);
+    font-weight: 700;
+  }
+
+  .progress-bar {
+    width: 60px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  .progress-fill.full { background: var(--accent2); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    opacity: 0.3;
+  }
+
+  .empty-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* NOTICE BADGES */
+  .notice-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .notice-req {
+    background: rgba(232,74,122,0.15);
+    color: var(--accent3);
+    border: 1px solid rgba(232,74,122,0.3);
+  }
+
+  .notice-info {
+    background: rgba(232,200,74,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(232,200,74,0.2);
+  }
+
+  /* CALC BUTTON */
+  .calc-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    border: none;
+    color: #000;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 0;
+  }
+
+  .calc-btn:hover {
+    background: #f0d45a;
+    box-shadow: 0 0 20px rgba(232,200,74,0.3);
+  }
+
+  /* SPECIAL REQUIREMENTS */
+  .special-req {
+    padding: 10px 20px;
+    background: rgba(232,74,122,0.05);
+    border-bottom: 1px solid rgba(232,74,122,0.1);
+  }
+
+  .special-req-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--accent3);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .special-req-item {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    color: var(--muted);
+    padding: 2px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .special-req-item::before {
+    content: '◆';
+    font-size: 6px;
+    color: var(--accent3);
+  }
+
+  /* SELECT CONTROLS */
+  .controls {
+    padding: 12px 20px;
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ctrl-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+  }
+
+  .ctrl-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 10px 20px 0;
+  }
+
+  .type-tag {
+    font-size: 0.55rem;
+    padding: 2px 6px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .tag-sword { background: rgba(74,232,176,0.1); color: var(--accent2); border: 1px solid rgba(74,232,176,0.2); }
+  .tag-style { background: rgba(232,200,74,0.1); color: var(--accent); border: 1px solid rgba(232,200,74,0.2); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div>
+        <div class="subtitle">⚔ Item Forge System</div>
+        <h1>CRAFT CALC</h1>
+      </div>
+      <div style="margin-bottom:10px; color: var(--muted); font-size: 0.75rem; max-width: 300px; line-height: 1.6;">
+        Pilih set yang ingin dibuat → masukkan jumlah bahan → lihat berapa set bisa di-craft
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- LEFT: SET LIST + INVENTORY -->
+    <div>
+      <div class="panel" style="margin-bottom: 20px;">
+        <div class="panel-header">
+          <span class="panel-title">PILIH SET</span>
+          <span class="panel-badge" id="selectedCount">0 SELECTED</span>
+        </div>
+        <div class="controls">
+          <button class="ctrl-btn" onclick="selectAll()">SELECT ALL</button>
+          <button class="ctrl-btn" onclick="clearAll()">CLEAR</button>
+        </div>
+        <div class="section-label">⚔ SWORDS / WEAPONS</div>
+        <div class="set-list" id="setList"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: REQUIREMENTS + RESULT -->
+    <div class="right-panel">
+      <!-- RESULT -->
+      <div class="panel result-panel">
+        <div class="panel-header">
+          <span class="panel-title">HASIL KALKULASI</span>
+        </div>
+        <div class="result-content">
+          <div style="display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;">
+            <div>
+              <div class="result-big" id="resultNumber">–</div>
+              <div class="result-label">Set bisa di-craft</div>
+            </div>
+            <div id="selectedSetName" style="font-family:'Rajdhani',sans-serif; font-size:0.9rem; color:var(--muted); padding-bottom: 14px;"></div>
+          </div>
+          <div class="result-divider"></div>
+          <div class="bottleneck-section">
+            <div class="bottleneck-title">Bahan Pembatas</div>
+            <div id="bottleneckList">
+              <div class="empty-state" style="padding: 20px 0 0;">
+                <div class="empty-text">Pilih set & masukkan inventory dulu</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="calc-btn" onclick="calculate()">▶ HITUNG SEKARANG</button>
+      </div>
+
+      <!-- INGREDIENTS INPUT -->
+      <div class="panel req-panel">
+        <div class="panel-header">
+          <span class="panel-title">TOTAL BAHAN (INVENTORY)</span>
+          <span class="panel-badge">Per Item</span>
+        </div>
+        <div class="req-list" id="reqList">
+          <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <div class="empty-text">Pilih set terlebih dahulu</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SETS = [
+  {
+    id: 'slime', name: 'SLIME', type: 'sword',
+    special: ['Demon Lord title'],
+    ingredients: [
+      { name: 'Gems', amount: 20000 },
+      { name: 'Sage Pulse', amount: 9 },
+      { name: 'Tempest Seal', amount: 6 },
+      { name: 'Slime Remnant', amount: 3 },
+      { name: 'Slime Core', amount: 1 },
+    ]
+  },
+  {
+    id: 'manipulator', name: 'MANIPULATOR SWORD', type: 'sword',
+    special: [],
+    ingredients: [
+      { name: 'Gems', amount: 10000 },
+      { name: 'Mirage Pendants', amount: 10 },
+      { name: 'Illusion Prisms', amount: 6 },
+      { name: 'Reiatsu Cores', amount: 3 },
+      { name: 'Ayoku Fragment', amount: 1 },
+    ]
+  },
+  {
+    id: 'true_manipulator', name: 'TRUE MANIPULATOR', type: 'sword',
+    special: ['Transcendent Being title', 'Aizen Sword required'],
+    ingredients: [
+      { name: 'Gems', amount: 35000 },
+      { name: 'Evolution Fragment', amount: 1 },
+      { name: 'Transcendent Core', amount: 3 },
+      { name: 'Divinity Essence', amount: 8 },
+      { name: 'Fusion Ring', amount: 15 },
+      { name: 'Chrysalis Sigil', amount: 75 },
+    ]
+  },
+  {
+    id: 'yamato', name: 'YAMATO', type: 'sword',
+    special: ['Blade Sovereign title', 'Soul Bless Race'],
+    ingredients: [
+      { name: 'Gems', amount: 30000 },
+      { name: 'Azure Heart', amount: 1 },
+      { name: 'Silent Storms', amount: 3 },
+      { name: 'Yamato Essence', amount: 7 },
+      { name: 'Frozen Will', amount: 14 },
+    ]
+  },
+  {
+    id: 'ragna', name: 'RAGNA', type: 'sword',
+    special: [],
+    ingredients: [
+      { name: 'Gems', amount: 4500 },
+      { name: 'Wyrm Brand', amount: 7 },
+      { name: 'Black Forest', amount: 3 },
+      { name: 'Silver Requiem', amount: 1 },
+    ]
+  },
+  {
+    id: 'ichigo', name: 'ICHIGO', type: 'sword',
+    special: [],
+    ingredients: [
+      { name: 'Gems', amount: 8500 },
+      { name: 'Soul Flame', amount: 2 },
+      { name: 'Spiritual Core', amount: 4 },
+      { name: 'Soul Fragment', amount: 8 },
+    ]
+  },
+  {
+    id: 'shadow_sword', name: 'SHADOW SWORD', type: 'sword',
+    special: [],
+    ingredients: [
+      { name: 'Gems', amount: 15000 },
+      { name: 'Atomic Core', amount: 1 },
+      { name: 'Shadow Essence', amount: 4 },
+      { name: 'Void Seed', amount: 8 },
+      { name: 'Umbral Capsule', amount: 20 },
+    ]
+  },
+  {
+    id: 'shadow_monarch', name: 'SHADOW MONARCH', type: 'sword',
+    special: ['King of Shadows title', 'Solo Hunter sword required'],
+    ingredients: [
+      { name: 'Monarch Core', amount: 10 },
+      { name: 'Monarch Essence', amount: 5 },
+      { name: 'Kamish Dagger', amount: 2 },
+      { name: 'Shadow Crystal', amount: 1 },
+    ]
+  },
+  {
+    id: 'atomic_sword', name: 'ATOMIC SWORD', type: 'sword',
+    special: ["'Eminence Incarnate' Title", 'Own the Shadow sword', 'Have 45,000 Gems'],
+    ingredients: [
+      { name: 'Gems', amount: 45000 },
+      { name: 'Atomic Omen', amount: 1 },
+      { name: 'Eminence Essence', amount: 3 },
+      { name: 'Shadow Remnant', amount: 9 },
+      { name: 'Magic Shard', amount: 16 },
+      { name: 'Abyss Sigil', amount: 80 },
+    ]
+  },
+  {
+    id: 'ice_queen', name: 'ICE QUEEN', type: 'sword',
+    special: ["'Frost Empress' Title"],
+    ingredients: [
+      { name: 'Gems', amount: 40000 },
+      { name: 'Ice Core', amount: 1 },
+      { name: 'Frozen Brand', amount: 4 },
+      { name: 'Glacier Remnant', amount: 9 },
+      { name: 'Battle Shard', amount: 17 },
+      { name: 'Frost Relic', amount: 25 },
+    ]
+  },
+  {
+    id: 'great_mage', name: 'GREATE MAGE SWORD', type: 'sword',
+    special: ["'Ancient Mage' Title"],
+    ingredients: [
+      { name: 'Mana Core', amount: 1 },
+      { name: 'Magic Essence', amount: 5 },
+      { name: 'Ancient Fragments', amount: 10 },
+      { name: 'Spell Echo', amount: 18 },
+      { name: 'Easter Eggs', amount: 500 },
+    ]
+  },
+  // STYLES
+  {
+    id: 'gojo', name: 'GOJO STYLES', type: 'style',
+    special: [],
+    ingredients: [
+      { name: 'Void Fragments', amount: 6 },
+      { name: 'Limitless Rings', amount: 3 },
+      { name: 'Infinity Core', amount: 1 },
+    ]
+  },
+  {
+    id: 'sukuna', name: 'SUKUNA STYLES', type: 'style',
+    special: [],
+    ingredients: [
+      { name: 'Cursed Fingers', amount: 6 },
+      { name: 'Dismantle Fangs', amount: 3 },
+      { name: 'Crimson Heart', amount: 1 },
+    ]
+  },
+  {
+    id: 'yuji', name: 'YUJI STYLES', type: 'style',
+    special: [],
+    ingredients: [
+      { name: 'Flash Impact', amount: 3 },
+      { name: 'Energy Cores', amount: 7 },
+      { name: 'Divergent Pulse', amount: 1 },
+    ]
+  },
+  {
+    id: 'alucard', name: 'ALUCARD', type: 'style',
+    special: [],
+    ingredients: [
+      { name: 'Casull', amount: 1 },
+      { name: 'Blood Ring', amount: 1 },
+    ]
+  },
+  {
+    id: 'strongest_today', name: 'STRONGEST OF TODAY STYLES', type: 'style',
+    special: [],
+    ingredients: [
+      { name: 'Infinity Essence', amount: 1 },
+      { name: 'Blue Singularities', amount: 3 },
+      { name: 'Reversal Pulses', amount: 9 },
+      { name: 'Six Eye', amount: 6 },
+    ]
+  },
+  {
+    id: 'strongest_history', name: 'STRONGEST OF HISTORY STYLES', type: 'style',
+    special: [],
+    ingredients: [
+      { name: 'Cursed Finger', amount: 1 },
+      { name: 'Malevolent Souls', amount: 3 },
+      { name: 'Vessel Rings', amount: 7 },
+      { name: 'Awakened Cursed Fingers', amount: 20 },
+    ]
+  },
+  {
+    id: 'gilgamesh', name: 'GILGAMESH STYLES', type: 'style',
+    special: ['"Golden King" Title'],
+    ingredients: [
+      { name: 'Throne Remnants', amount: 12 },
+      { name: 'Ancient Shards', amount: 6 },
+      { name: 'Golden Essence', amount: 3 },
+      { name: 'Phantasm Core', amount: 1 },
+    ]
+  },
+  {
+    id: 'anos', name: 'ANOS STYLE', type: 'style',
+    special: ['Demon King Title'],
+    ingredients: [
+      { name: 'Calamity Seals', amount: 65 },
+      { name: 'Demonic Fragments', amount: 12 },
+      { name: 'Demonic Shards', amount: 6 },
+      { name: 'Destruction Eyes', amount: 2 },
+      { name: 'Imperial Mask', amount: 1 },
+    ]
+  },
+  {
+    id: 'blessed', name: 'BLESSED STYLE', type: 'style',
+    special: ['Astral Empress Title'],
+    ingredients: [
+      { name: 'Tempest Relics', amount: 25 },
+      { name: 'Tide Remnants', amount: 14 },
+      { name: 'Gale Essences', amount: 8 },
+      { name: 'Aero Cores', amount: 3 },
+      { name: 'Celestial Mark', amount: 1 },
+    ]
+  },
+];
+
+let selectedSets = new Set();
+let inventoryValues = {}; // ingredient name -> quantity owned
+
+function initSetList() {
+  const container = document.getElementById('setList');
+  container.innerHTML = '';
+  
+  // Swords first, then styles
+  const swords = SETS.filter(s => s.type === 'sword');
+  const styles = SETS.filter(s => s.type === 'style');
+
+  // Label for swords already in section-label
+  swords.forEach(set => container.appendChild(createSetItem(set)));
+  
+  // Section label for styles
+  const styleLabel = document.createElement('div');
+  styleLabel.className = 'section-label';
+  styleLabel.style.borderTop = '1px solid var(--border)';
+  styleLabel.style.paddingTop = '14px';
+  styleLabel.textContent = '✦ STYLES / FIGHTING STYLES';
+  container.appendChild(styleLabel);
+  
+  styles.forEach(set => container.appendChild(createSetItem(set)));
+}
+
+function createSetItem(set) {
+  const el = document.createElement('div');
+  el.className = 'set-item';
+  el.id = 'set-' + set.id;
+
+  const typeTag = set.type === 'sword' 
+    ? '<span class="type-tag tag-sword">Sword</span>'
+    : '<span class="type-tag tag-style">Style</span>';
+
+  const hasSpecial = set.special.length > 0 
+    ? '<span style="font-size:0.6rem; color:var(--accent3);">⚠ REQ</span>' 
+    : '';
+
+  el.innerHTML = `
+    <div class="set-checkbox"><span class="check-icon">✓</span></div>
+    <div style="flex:1; min-width:0;">
+      <div class="set-name">${set.name}</div>
+      <div style="display:flex; gap:6px; align-items:center; margin-top:3px;">
+        ${typeTag}
+        ${hasSpecial}
+      </div>
+    </div>
+    <div class="set-info">${set.ingredients.length} bahan</div>
+  `;
+  el.onclick = () => toggleSet(set.id);
+  return el;
+}
+
+function toggleSet(id) {
+  if (selectedSets.has(id)) {
+    selectedSets.delete(id);
+    document.getElementById('set-' + id).classList.remove('selected');
+  } else {
+    selectedSets.add(id);
+    document.getElementById('set-' + id).classList.add('selected');
+  }
+  updateSelectedCount();
+  renderIngredients();
+}
+
+function updateSelectedCount() {
+  document.getElementById('selectedCount').textContent = selectedSets.size + ' SELECTED';
+}
+
+function selectAll() {
+  SETS.forEach(s => {
+    selectedSets.add(s.id);
+    document.getElementById('set-' + s.id).classList.add('selected');
+  });
+  updateSelectedCount();
+  renderIngredients();
+}
+
+function clearAll() {
+  SETS.forEach(s => {
+    selectedSets.delete(s.id);
+    document.getElementById('set-' + s.id).classList.remove('selected');
+  });
+  updateSelectedCount();
+  renderIngredients();
+}
+
+function getSelectedSets() {
+  return SETS.filter(s => selectedSets.has(s.id));
+}
+
+function renderIngredients() {
+  const container = document.getElementById('reqList');
+  
+  if (selectedSets.size === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">Pilih set terlebih dahulu</div></div>`;
+    return;
+  }
+
+  const selected = getSelectedSets();
+  
+  // Gather all unique ingredients
+  const allIngredients = {}; // name -> total needed for 1 set each
+  selected.forEach(set => {
+    set.ingredients.forEach(ing => {
+      if (!allIngredients[ing.name]) {
+        allIngredients[ing.name] = { total: 0, sets: [] };
+      }
+      allIngredients[ing.name].total += ing.amount;
+      allIngredients[ing.name].sets.push({ setName: set.name, amount: ing.amount });
+    });
+  });
+
+  let html = '';
+  
+  // Group by set
+  selected.forEach(set => {
+    if (set.special.length > 0) {
+      html += `<div class="special-req">
+        <div class="special-req-title">⚠ Requirements — ${set.name}</div>
+        ${set.special.map(r => `<div class="special-req-item">${r}</div>`).join('')}
+      </div>`;
+    }
+
+    html += `<div class="req-group">
+      <div class="req-group-title">${set.name}</div>`;
+
+    set.ingredients.forEach(ing => {
+      const currentVal = inventoryValues[ing.name] || '';
+      let inputClass = '';
+      if (currentVal !== '') {
+        inputClass = parseInt(currentVal) >= ing.amount ? 'sufficient' : 'insufficient';
+      }
+      
+      html += `<div class="req-row">
+        <div class="req-name">${ing.name}</div>
+        <div class="req-amount">×${ing.amount.toLocaleString()}</div>
+        <input 
+          class="req-input ${inputClass}" 
+          type="number" 
+          min="0"
+          placeholder="0"
+          id="inv_${escId(ing.name)}"
+          value="${currentVal}"
+          oninput="updateInventory('${ing.name.replace(/'/g,"\\'")}', this.value, this)"
+          onchange="updateInventory('${ing.name.replace(/'/g,"\\'")}', this.value, this)"
+        />
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function escId(name) {
+  return name.replace(/[^a-zA-Z0-9]/g, '_');
+}
+
+function updateInventory(name, value, el) {
+  inventoryValues[name] = value === '' ? '' : Math.max(0, parseInt(value) || 0);
+  
+  // Update styling for this input across all instances
+  document.querySelectorAll(`input[id="inv_${escId(name)}"]`).forEach(input => {
+    input.classList.remove('sufficient', 'insufficient');
+  });
+}
+
+function calculate() {
+  const selected = getSelectedSets();
+  if (selected.size === 0 && selectedSets.size === 0) {
+    alert('Pilih setidaknya 1 set dulu!');
+    return;
+  }
+
+  // For each selected set, calculate independently
+  // The question is: how many sets can we make total?
+  // We combine all ingredients needed and find the minimum ratio
+  
+  if (selectedSets.size === 0) {
+    document.getElementById('resultNumber').textContent = '–';
+    return;
+  }
+
+  // Collect ALL required ingredients and total amounts needed per "batch" (1 of each selected set)
+  const totalRequired = {};
+  selected.forEach(set => {
+    set.ingredients.forEach(ing => {
+      if (!totalRequired[ing.name]) totalRequired[ing.name] = 0;
+      totalRequired[ing.name] += ing.amount;
+    });
+  });
+
+  // Find limiting factor
+  let maxSets = Infinity;
+  const ratios = [];
+
+  for (const [name, required] of Object.entries(totalRequired)) {
+    const have = parseInt(inventoryValues[name]) || 0;
+    const canMake = Math.floor(have / required);
+    ratios.push({ name, have, required, canMake, ratio: have / required });
+    maxSets = Math.min(maxSets, canMake);
+  }
+
+  if (maxSets === Infinity) maxSets = 0;
+
+  // Display result
+  document.getElementById('resultNumber').textContent = maxSets;
+  
+  const setNames = selected.map(s => s.name).join(', ');
+  document.getElementById('selectedSetName').textContent = 
+    selected.length === 1 ? selected[0].name : `${selected.length} sets combined`;
+
+  // Show bottlenecks (sorted by ratio ascending = most limiting first)
+  ratios.sort((a, b) => a.ratio - b.ratio);
+  
+  const topBottlenecks = ratios.slice(0, 5);
+  const bottleneckHtml = topBottlenecks.map(r => {
+    const pct = Math.min(100, Math.floor(r.ratio * 100));
+    const isFull = r.have >= r.required;
+    return `<div class="bottleneck-row">
+      <div class="bottleneck-name">${r.name}</div>
+      <div class="bottleneck-have">${(r.have).toLocaleString()}/${r.required.toLocaleString()}</div>
+      <div class="progress-bar">
+        <div class="progress-fill ${isFull ? 'full' : ''}" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('bottleneckList').innerHTML = bottleneckHtml || '<div style="color:var(--muted); font-size:0.8rem;">Semua bahan cukup!</div>';
+
+  // Flash result
+  const resultEl = document.getElementById('resultNumber');
+  resultEl.style.transform = 'scale(1.1)';
+  resultEl.style.transition = 'transform 0.2s';
+  setTimeout(() => {
+    resultEl.style.transform = 'scale(1)';
+  }, 200);
+}
+
+// Auto-calculate on input change
+function updateInventory(name, value, el) {
+  inventoryValues[name] = value === '' ? '' : Math.max(0, parseInt(value) || 0);
+  
+  // Update color styling
+  const selected = getSelectedSets();
+  selected.forEach(set => {
+    set.ingredients.forEach(ing => {
+      if (ing.name === name) {
+        const inputs = document.querySelectorAll(`#inv_${escId(name)}`);
+        inputs.forEach(input => {
+          input.classList.remove('sufficient', 'insufficient');
+          if (value !== '') {
+            const val = parseInt(value) || 0;
+            input.classList.add(val >= ing.amount ? 'sufficient' : 'insufficient');
+          }
+        });
+      }
+    });
+  });
+}
+
+// Init
+initSetList();
+</script>
+</body>
+</html>
